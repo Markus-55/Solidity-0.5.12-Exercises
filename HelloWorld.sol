@@ -6,20 +6,26 @@ contract HelloWorld{
         string name;
         uint age;
         uint height;
-        bool senior;
+        address Creator;
     }
-    
-    Person[] people;
-    
-    function createPerson(string memory name, uint age, uint height) public{
+
+    Person[] private people;
+
+    function createPerson(string memory _name, uint _age, uint _height) public{
         Person memory newPerson;
-        newPerson.name = name;
-        newPerson.age = age;
-        newPerson.height = height;
+
+        address Creator = msg.sender;
+
+        newPerson.name = _name;
+        newPerson.age = _age;
+        newPerson.height = _height;
+        newPerson.Creator = Creator;
+
         people.push(newPerson);
-    
     }
-    
-    function getPerson(uint index) public view{
-        people[index];
+
+    function getPerson(uint id) public view returns (string memory, uint, uint, address){
+        return (people[id].name, people[id].age, people[id].height, people[id].Creator);
     }
+
+}
