@@ -1,12 +1,15 @@
+// Import the file Ownable.sol
+import "./Ownable.sol";
+// Import the file Destroyable.sol
+import "./Destroyable.sol";
+
 pragma solidity 0.5.12;
 
-// Make a contract helloWorld
-contract helloWorld{
+// Make contarct HelloWorld
+contract HelloWorld is Ownable, Destroyable {
     
-    // Make a struct person
+    // Make a struct Person
     struct Person {
-        // Make an address creator
-        address creator;
         // Make a string name
         string name;
         // Make a uint age
@@ -15,60 +18,75 @@ contract helloWorld{
         uint height;
     }
     
-    // Creates a public numOfPeopleByAddr mapping with the address that gives back a uint
-    mapping(address => uint) public numOfPeopleByAddr;
+    // Make a uint variable balance
+    uint public balance;
     
-    // Create a private people array with the Person struct
-    Person[] private people;
-
-    // Creates a person with the given name, age and height
-    function createPerson(string memory _name, uint _age, uint _height) public{
-
-        // Creates the new person from the person struct stored in memory
+    // Make a modifier that costs in the correct cost
+    modifier costs(uint cost){
+        // Require the users value to be >= to the cost
+        require(msg.value >= cost);
+        // Continue the execution
+        _;
+    }
+    
+    // Make a people mapping with the address that gives back a person 
+    mapping(address => Person) private people;
+    // Make an address array of the creators
+    address[] private creators;
+    
+    // Creates a person with a name, age and height as an input argument that is payable and costs 1 ether
+    function createPerson(string memory _name, uint _age, uint _height) public payable costs(1 ether) {
+        // Require the age to be < 150
+        require(_age < 150, "Age needs to be below 150");
+        // Save the users value in the balance
+        balance += msg.value;
+        
+        // Creates a new person out of the person memory
         Person memory newPerson;
-        // The creators address is = their own address
-        newPerson.creator = msg.sender;
-        // The name of the new person is = to the function input _name
+        // The new persons name is = to the input name
         newPerson.name = _name;
-        // The age of the new person is = to the function input _age
+        // The new persons age is = to the input age
         newPerson.age = _age;
-        // The height of the new person is = to the function input _height
+        // The new persons height is = to the input height
         newPerson.height = _height;
-
-        // The creators address of the people mapping is = to the new person
-        people.push(newPerson);
-        
-        // The users address of the numOfPeopleByAddr mapping += 1
-        numOfPeopleByAddr[msg.sender] += 1;
-        
     }
     
-    // Gets a person and returns the string name, uint age and uint height
-    function getPerson(uint id) public view returns (string memory _name, uint _age, uint _height, address creator){
-
-        // returns the persons name, age and height of the people mapping with the creators address 
-        return (people[id].name, people[id].age, people[id].height, people[id].creator);
+    // Make a function to insert a person
+    function insertPerson(Person memory newPerson) private {
+        // The creators address is = to the users address
+        address creator = msg.sender;
+        // The creators address of the people mapping is = to the new person 
+        people[creator] = newPerson;
     }
     
-    // Make a function returnIds and returns the uint array memory
-    function returnIds() private view returns (uint[] memory){
+    // gets a person with their name, age and height
+    function getPerson() public view returns(string memory name, uint age, uint height){
+        // The creators address is = to the users address
+        address creator = msg.sender;
+        // Return the name, age and height in the people mapping with the creators address
+        return (people[creator].name, people[creator].age, people[creator].height);
+    }
+    
+    // Make a function that can only be accessed by the owner and to delete a person with the creator address
+    function deletePerson(address _creator) public onlyOwner {
         
-        // The uint array memory result = to the new uint array numOfPeopleByAddr mapping from the users address
-        uint[] memory result = new uint[](numOfPeopleByAddr[msg.sender]);
-        // uint creator
-        uint k;
-        // The loop starts at 0 and ends at the max length of the people array
-        for (uint i=0; i<people.length;i++) {
-            // if the people index is == to the users address
-            if(people[i].creator == msg.sender) {
-                // The result of the creator is = to the index
-                result[k] = i;
-                // creator +1
-                k++;
-            }
-        }
-        // Returns the result
-        return result;
+        // delete the people mapping with the creators address array
+        delete people[_creator];
+        // Assert that the age of the people is = to 0
+        assert(people[_creator].age == 0);
     }
     
+    // Make a function that can only be accessed by the owner, to get a creator with their id and that returns an id
+    function getCreator(uint _id) public view onlyOwner returns(address){
+        // Returns the creators with their id
+        return creators[_id];
+    }
+    
+    // Make function that can only be accessed by the owner, to withdraw everything and returns a uint
+    function withdrawAll() public onlyOwner returns(uint) {
+        // The balance is updated to 0
+        balance = 0;
+        // Transfer the balance to the users address
+        msg.sender.transfer(balance);
+    }
 }
