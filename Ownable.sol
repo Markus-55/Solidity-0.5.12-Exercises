@@ -5,6 +5,8 @@ contract Ownable {
     
     // The owner address
     address public owner;
+    // The owner address converted into a payable address
+    address payable ownerPayable = address(uint160(owner));
     
     // Make an only owner modifier
     modifier onlyOwner(){
