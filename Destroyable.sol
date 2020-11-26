@@ -8,7 +8,7 @@ contract Destroyable is Ownable {
     
     // Make a function to selfdestruct, only accessible by the owner
     function destroy() public onlyOwner {
-        // Selfdestruct using the users address
-        selfdestruct(msg.sender);
+        // Selfdestruct using the owners payable address
+        selfdestruct(ownerPayable);
     }
 }
