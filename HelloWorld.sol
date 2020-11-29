@@ -1,12 +1,12 @@
+pragma solidity 0.5.12;
+
 // Import the file Ownable.sol
 import "./Ownable.sol";
 // Import the file Destroyable.sol
 import "./Destroyable.sol";
 
-pragma solidity 0.5.12;
-
-// Make contarct HelloWorld
-contract HelloWorld is Ownable, Destroyable {
+// Make a contract People that inherits from the Ownable and Destroyable contract
+contract People is Ownable, Destroyable {
     
     // Make a struct Person
     struct Person {
@@ -18,28 +18,15 @@ contract HelloWorld is Ownable, Destroyable {
         uint height;
     }
     
-    // Make a uint variable balance
-    uint public balance;
-    
-    // Make a modifier that costs in the correct cost
-    modifier costs(uint cost){
-        // Require the users value to be >= to the cost
-        require(msg.value >= cost);
-        // Continue the execution
-        _;
-    }
-    
-    // Make a people mapping with the address that gives back a person 
+    // Make a people mapping with the address that points to the Person struct 
     mapping(address => Person) private people;
     // Make an address array of the creators
     address[] private creators;
     
-    // Creates a person with a name, age and height as an input argument that is payable and costs 1 ether
-    function createPerson(string memory _name, uint _age, uint _height) public payable costs(1 ether) {
+    // Creates a person with a name, age and height as an input argument
+    function createPerson(string calldata _name, uint _age, uint _height) external {
         // Require the age to be < 150
         require(_age < 150, "Age needs to be below 150");
-        // Save the users value in the balance
-        balance += msg.value;
         
         // Creates a new person out of the person memory
         Person memory newPerson;
@@ -49,6 +36,11 @@ contract HelloWorld is Ownable, Destroyable {
         newPerson.age = _age;
         // The new persons height is = to the input height
         newPerson.height = _height;
+        
+        // call the function insertPerson with the new person as an argument
+        insertPerson(newPerson);
+        // Push the users address into the creators array
+        creators.push(msg.sender);
     }
     
     // Make a function to insert a person
@@ -59,34 +51,26 @@ contract HelloWorld is Ownable, Destroyable {
         people[creator] = newPerson;
     }
     
-    // gets a person with their name, age and height
-    function getPerson() public view returns(string memory name, uint age, uint height){
+    // Make a function that gets a person
+    function getPerson() public view returns(string memory, uint, uint){
         // The creators address is = to the users address
         address creator = msg.sender;
         // Return the name, age and height in the people mapping with the creators address
         return (people[creator].name, people[creator].age, people[creator].height);
     }
     
-    // Make a function that can only be accessed by the owner and to delete a person with the creator address
+    // Make a function that can only be accessed by the owner, to delete a person with the creator address
     function deletePerson(address _creator) public onlyOwner {
-        
-        // delete the people mapping with the creators address array
+        // delete the creator in people mapping
         delete people[_creator];
-        // Assert that the age of the people is = to 0
+        // Assert that the age of the people with the creator address is = to 0
         assert(people[_creator].age == 0);
     }
     
-    // Make a function that can only be accessed by the owner, to get a creator with their id and that returns an id
+    // Make a function that can only be accessed by the owner, to get a creator with their id
     function getCreator(uint _id) public view onlyOwner returns(address){
-        // Returns the creators with their id
+        // Returns the id of creators address array
         return creators[_id];
     }
     
-    // Make function that can only be accessed by the owner, to withdraw everything and returns a uint
-    function withdrawAll() public onlyOwner returns(uint) {
-        // The balance is updated to 0
-        balance = 0;
-        // Transfer the balance to the users address
-        msg.sender.transfer(balance);
-    }
 }
